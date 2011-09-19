@@ -26,9 +26,10 @@ Files are copied from your current checkout, so make sure that there are no modi
 
 <?php
 } else {
-	if (is_dir('uppack')) {
-		echo 'uppack directory already exists: Remove directory before running again.';
-		// TODO delete directory if flag set.
+	$merge = array_search('--merge', $argv) !== FALSE || array_search('-m', $argv) !== FALSE;
+	// TODO add flag to delete existing package contents first.
+	if (is_dir('uppack')  && !$merge) {
+		echo "uppack directory already exists: \n\tRemove directory or use --merge to append files to existing directory.";
 		exit();
 	}
 	$execdir = getcwd();
