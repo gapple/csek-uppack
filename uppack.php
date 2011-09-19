@@ -44,22 +44,35 @@ Files are copied from your current checkout, so make sure that there are no modi
 	// Change to directory if specified for running svn command.
 	if (($pos = array_search('-p', $argv)) !== FALSE) {
 		chdir($argv[$pos+1]);
-		$changedPath = $argv[$pos+1];
+		$sourcePath = $argv[$pos+1];
 	}
-	exec('svn log -v -r ' . $revision, $output);
-	if (isset($changedPath)) {
+	// Determine the relative path in the repository, if checkout is not from 
+	// repository root.
+	exec('svn info', $infoOutput);
+	foreach ($infoOutput as $l) {
+		unset($matches);
+		if (preg_match('<URL:\s(.*)$>', $l, $matches)) {
+			$repoPath = $matches[1];
+		}
+		else if (preg_match('<Repository Root:\s(.*)$>', $l, $matches)) {
+			$repoRoot = $matches[1];
+		}
+	}
+	$repoPath = urldecode(str_replace($repoRoot, '', $repoPath));
+	exec('svn log -v -r ' . $revision, $logOutput);
+	if (isset($sourcePath)) {
 		chdir($execdir);
 	}
 	else {
-		$changedPath = '.';
+		$sourcePath = '.';
 	}
-
+	
 	// Find the last action performed on each path.
 	$paths = array();
-	foreach($output as $l) {
+	foreach($logOutput as $l) {
 		unset($matches);
-		if (preg_match('<^\s+([MAD])\s/?(.*)$>', $l, $matches)) {
-			$paths[$matches[2]] = $matches[1];
+		if (preg_match('<^\s+([MAD])\s(.*)$>', $l, $matches)) {
+			$paths[str_replace($repoPath, '', $matches[2])] = $matches[1];
 		}
 	}
 	if (empty($paths)) {
@@ -67,19 +80,19 @@ Files are copied from your current checkout, so make sure that there are no modi
 	}
 
 	$deletions = array();
-	foreach ($paths as $path=>$change) {
+	foreach ($paths as $filePath=>$change) {
 		if ($change == 'D'){
-			$deletions[] = $path;
+			$deletions[] = $filePath;
 		}
 		else {
-			if (is_file($changedPath . '/' . $path)) {
-				$dirpath = preg_replace('</[^/]+$>', '', $path);
-				if (!is_dir('uppack/' . $dirpath)) {
-					echo 'prepping path: uppack/' . $dirpath . "\n";
-					prep_path('uppack/' . $dirpath);
+			if (is_file($sourcePath . '/' . $filePath)) {
+				$dirpath = preg_replace('</[^/]+$>', '', $filePath);
+				if (!is_dir('uppack' . $dirpath)) {
+					echo 'prepping path: uppack' . $dirpath . "\n";
+					prep_path('uppack' . $dirpath);
 				}
-				echo 'copying file: ' . $path . "\n";
-				copy($changedPath . '/' . $path, 'uppack/' . $path) or die('could not copy: ' . $path);
+				echo 'copying file: ' . $filePath . "\n";
+				copy($sourcePath . $filePath, 'uppack' . $filePath) or die('could not copy: ' . $filePath);
 			}
 		}
 	}
