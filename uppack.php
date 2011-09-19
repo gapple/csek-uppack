@@ -72,6 +72,7 @@ Options:
   -o [--output] ARG   : Specify a directory to output to.  Default is 'uppack'.
   -m [--merge]        : If the output directory already exists, proceed anyways.
   -q [--quiet]        : Suppress output on STDOUT.
+  -u [--update]       : Call `svn update` on the source path before packaging.
 
 <?php
 } else {
@@ -112,6 +113,10 @@ Options:
 		}
 	}
 	$repoPath = urldecode(str_replace($repoRoot, '', $repoPath));
+	if (get_flag('update', 'u')) {
+		_echo("updated working copy\n");
+		exec('svn update');
+	}
 	exec('svn log -v -r ' . $revision, $logOutput);
 	if ($sourcePath) {
 		chdir($execdir);
