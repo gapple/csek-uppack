@@ -15,14 +15,21 @@ function prep_path($path) {
 if (in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
 ?>
 
-This script exports files from a subversion repository which have changed in the specified commits.
-Files are copied from your current checkout, so make sure that there are no modifications.
+uppack.php: Export files from a subversion working copy which were changed in a set of commits.
+Usage: uppack.php [options]
 
-  Usage:
-  <?php echo $argv[0]; ?> [options]
+  Files are copied from your current checkout, so make sure that there are no modifications.
+  
+  Examples:
+    uppack.php -r 100
+    uppack.php -r 100:110
+    uppack.php -p path/to/repository
 
-
-  -r specify commits to ouput.  If ommited, the latest commit is used.
+Options:
+  -r ARG        : Specify a commit or range of commits (inclusive) to ouput.  
+                  If ommited, HEAD is used.
+  -p ARG        : Specify the path to the repository to use.
+  -m [--merge]  : If the output directory already exists, proceed anyways.
 
 <?php
 } else {
