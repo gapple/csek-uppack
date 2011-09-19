@@ -72,7 +72,7 @@ Files are copied from your current checkout, so make sure that there are no modi
 	foreach($logOutput as $l) {
 		unset($matches);
 		if (preg_match('<^\s+([MAD])\s(.*)$>', $l, $matches)) {
-			$paths[str_replace($repoPath, '', $matches[2])] = $matches[1];
+			$paths[preg_replace('<^' . $repoPath . '>', '', $matches[2])] = $matches[1];
 		}
 	}
 	if (empty($paths)) {
