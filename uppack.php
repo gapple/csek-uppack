@@ -19,7 +19,8 @@ This script exports files from a subversion repository which have changed in the
 Files are copied from your current checkout, so make sure that there are no modifications.
 
   Usage:
-  <?php echo $argv[0]; ?>
+  <?php echo $argv[0]; ?> [options]
+
 
   -r specify commits to ouput.  If ommited, the latest commit is used.
 
@@ -45,7 +46,7 @@ Files are copied from your current checkout, so make sure that there are no modi
 		chdir($argv[$pos+1]);
 		$changedPath = $argv[$pos+1];
 	}
-    exec('svn log -v -r ' . $revision, $output);
+	exec('svn log -v -r ' . $revision, $output);
 	if (isset($changedPath)) {
 		chdir($execdir);
 	}
@@ -55,15 +56,15 @@ Files are copied from your current checkout, so make sure that there are no modi
 
 	// Find the last action performed on each path.
 	$paths = array();
-    foreach($output as $l) {
-    	unset($matches);
-    	if (preg_match('<^\s+([MAD])\s/?(.*)$>', $l, $matches)) {
+	foreach($output as $l) {
+		unset($matches);
+		if (preg_match('<^\s+([MAD])\s/?(.*)$>', $l, $matches)) {
 			$paths[$matches[2]] = $matches[1];
-    	}
-    }
-    if (empty($paths)) {
-    	exit('No Changed Paths');
-    }
+		}
+	}
+	if (empty($paths)) {
+		exit('No Changed Paths');
+	}
 
 	$deletions = array();
 	foreach ($paths as $path=>$change) {
