@@ -11,6 +11,36 @@ function prep_path($path) {
 		}
 	}
 }
+/**
+ * Return the value of a command line option.
+ * @return The option value if set, false otherwise.
+ */
+function get_option($long, $short = null) {
+	global $argv;
+		
+	if (($pos = array_search('--' . $long, $argv)) !== false) {
+		return $argv[$pos + 1];
+	}
+	if (!empty($short) && ($pos = array_search('-' . $short, $argv)) !== false) {
+		return $argv[$pos + 1];
+	}	
+	return false;
+}
+/**
+ * Return if a command line flag is set.
+ * @return true if the flag is set, false otherwise.
+ */
+function get_flag($long, $short = null) {
+	global $argv;
+
+	if (($pos = array_search('--' . $long, $argv)) !== false) {
+		return true;
+	}
+	if (!empty($short) && ($pos = array_search('-' . $short, $argv)) !== false) {
+		return true;
+	}	
+	return false;
+}
 
 if (in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
 ?>
@@ -26,33 +56,33 @@ Usage: uppack.php [options]
     uppack.php -p path/to/repository
 
 Options:
-  -r ARG        : Specify a commit or range of commits (inclusive) to ouput.  
-                  If ommited, HEAD is used.
-  -p ARG        : Specify the path to the repository to use.
-  -m [--merge]  : If the output directory already exists, proceed anyways.
+  -r [--revision] ARG : Specify a commit or range of commits (inclusive) to 
+                        ouput.  If ommited, HEAD is used.
+  -p [--path] ARG     : Specify the path to the repository to use.
+  -m [--merge]        : If the output directory already exists, proceed anyways.
 
 <?php
 } else {
-	$merge = array_search('--merge', $argv) !== FALSE || array_search('-m', $argv) !== FALSE;
 	// TODO add flag to delete existing package contents first.
-	if (is_dir('uppack')  && !$merge) {
+	if (is_dir('uppack')  && !get_flag('merge', 'm')) {
 		echo "uppack directory already exists: \n\tRemove directory or use --merge to append files to existing directory.";
 		exit();
 	}
 	$execdir = getcwd();
 
 	// Parse revisions to use.
-	if (($pos = array_search('-r', $argv)) !== FALSE) {
-		$revision = escapeshellarg($argv[$pos+1]);
-	}
+	$revision = get_option('revision', 'r');
+	if ($revision) {
+		$revision = escapeshellarg($revision);
+	} 
 	else {
 		$revision = 'HEAD';
 	}
 
 	// Change to directory if specified for running svn command.
-	if (($pos = array_search('-p', $argv)) !== FALSE) {
-		chdir($argv[$pos+1]);
-		$sourcePath = $argv[$pos+1];
+	$sourcePath = get_option('path', 'p');
+	if ($sourcePath) {
+		chdir($sourcePath);
 	}
 	// Determine the relative path in the repository, if checkout is not from 
 	// repository root.
@@ -68,7 +98,7 @@ Options:
 	}
 	$repoPath = urldecode(str_replace($repoRoot, '', $repoPath));
 	exec('svn log -v -r ' . $revision, $logOutput);
-	if (isset($sourcePath)) {
+	if ($sourcePath) {
 		chdir($execdir);
 	}
 	else {
