@@ -41,6 +41,16 @@ function get_flag($long, $short = null) {
 	}	
 	return false;
 }
+function _echo($text) {
+	static $quiet;
+	if (!isset($quiet)) {
+		$quiet = get_flag('quiet', 'q');
+	}
+	
+	if (!$quiet) {
+		echo $text;
+	}
+}
 
 if (isset($argv[1]) && in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
 ?>
@@ -61,6 +71,7 @@ Options:
   -p [--path] ARG     : Specify the path to the repository to use.
   -o [--output] ARG   : Specify a directory to output to.  Default is 'uppack'.
   -m [--merge]        : If the output directory already exists, proceed anyways.
+  -q [--quiet]        : Suppress output on STDOUT.
 
 <?php
 } else {
@@ -69,7 +80,7 @@ Options:
 	}
 	// TODO add flag to delete existing package contents first.
 	if (is_dir($outputDir)  && !get_flag('merge', 'm')) {
-		echo "output directory already exists: \n\tRemove directory or use --merge to append files to existing directory.";
+		_echo("output directory already exists: \n\tRemove directory or use --merge to append files to existing directory.");
 		exit();
 	}
 	$execdir = getcwd();
@@ -118,7 +129,8 @@ Options:
 		}
 	}
 	if (empty($paths)) {
-		exit('No Changed Paths');
+		_echo('No Changed Paths');
+		exit();
 	}
 
 	$deletions = array();
@@ -130,10 +142,10 @@ Options:
 			if (is_file($sourcePath . '/' . $filePath)) {
 				$dirpath = preg_replace('</[^/]+$>', '', $filePath);
 				if (!is_dir($outputDir . $dirpath)) {
-					echo 'prepping path: ' . $outputDir . $dirpath . "\n";
+					_echo('prepping path: ' . $outputDir . $dirpath . "\n");
 					prep_path($outputDir . $dirpath);
 				}
-				echo 'copying file: ' . $filePath . "\n";
+				_echo('copying file: ' . $filePath . "\n");
 				copy($sourcePath . $filePath, $outputDir . $filePath) or die('could not copy: ' . $filePath);
 			}
 		}
