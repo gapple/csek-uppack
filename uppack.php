@@ -42,7 +42,7 @@ function get_flag($long, $short = null) {
 	return false;
 }
 
-if (in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
+if (isset($argv[1]) && in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
 ?>
 
 uppack.php: Export files from a subversion working copy which were changed in a set of commits.
@@ -59,13 +59,17 @@ Options:
   -r [--revision] ARG : Specify a commit or range of commits (inclusive) to 
                         ouput.  If ommited, HEAD is used.
   -p [--path] ARG     : Specify the path to the repository to use.
+  -o [--output] ARG   : Specify a directory to output to.  Default is 'uppack'.
   -m [--merge]        : If the output directory already exists, proceed anyways.
 
 <?php
 } else {
+	if(!($outputDir = get_option('output', 'o'))){
+		$outputDir = 'uppack';
+	}
 	// TODO add flag to delete existing package contents first.
-	if (is_dir('uppack')  && !get_flag('merge', 'm')) {
-		echo "uppack directory already exists: \n\tRemove directory or use --merge to append files to existing directory.";
+	if (is_dir($outputDir)  && !get_flag('merge', 'm')) {
+		echo "output directory already exists: \n\tRemove directory or use --merge to append files to existing directory.";
 		exit();
 	}
 	$execdir = getcwd();
@@ -125,17 +129,17 @@ Options:
 		else {
 			if (is_file($sourcePath . '/' . $filePath)) {
 				$dirpath = preg_replace('</[^/]+$>', '', $filePath);
-				if (!is_dir('uppack' . $dirpath)) {
-					echo 'prepping path: uppack' . $dirpath . "\n";
-					prep_path('uppack' . $dirpath);
+				if (!is_dir($outputDir . $dirpath)) {
+					echo 'prepping path: ' . $outputDir . $dirpath . "\n";
+					prep_path($outputDir . $dirpath);
 				}
 				echo 'copying file: ' . $filePath . "\n";
-				copy($sourcePath . $filePath, 'uppack' . $filePath) or die('could not copy: ' . $filePath);
+				copy($sourcePath . $filePath, $outputDir . $filePath) or die('could not copy: ' . $filePath);
 			}
 		}
 	}
 
 	if (!empty($deletions)) {
-		file_put_contents('uppack/uppack-deletions.txt', implode("\n", $deletions)) or die('Could not write deletions file');
+		file_put_contents($outputDir . '/uppack-deletions.txt', implode("\n", $deletions)) or die('Could not write deletions file');
 	}
 }
