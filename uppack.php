@@ -76,12 +76,19 @@ Options:
 
 <?php
 } else {
+	$sourcePath = get_option('path', 'p');
+	$sourcePathSvn = ($sourcePath? $sourcePath . '/' : '') . '.svn';
+	if (!file_exists($sourcePathSvn)) {
+		_echo("Source path is not a subversion working copy.\n  Run command from a working copy directory, or specify the path to the working copy with --path");
+		exit();
+	}
+	
 	if(!($outputDir = get_option('output', 'o'))){
 		$outputDir = 'uppack';
 	}
 	// TODO add flag to delete existing package contents first.
 	if (is_dir($outputDir)  && !get_flag('merge', 'm')) {
-		_echo("output directory already exists: \n\tRemove directory or use --merge to append files to existing directory.");
+		_echo("output directory already exists: \n  Remove directory or use --merge to append files to existing directory.");
 		exit();
 	}
 	$execdir = getcwd();
@@ -96,7 +103,6 @@ Options:
 	}
 
 	// Change to directory if specified for running svn command.
-	$sourcePath = get_option('path', 'p');
 	if ($sourcePath) {
 		chdir($sourcePath);
 	}
