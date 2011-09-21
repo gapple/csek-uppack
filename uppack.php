@@ -123,7 +123,7 @@ Options:
 		_echo("updated working copy\n");
 		exec('svn update');
 	}
-	exec('svn log -v -r ' . $revision, $logOutput);
+	exec('svn log --xml -v -r ' . $revision, $logOutput);
 	if ($sourcePath) {
 		chdir($execdir);
 	}
@@ -133,16 +133,16 @@ Options:
 	
 	// Find the last action performed on each path.
 	$paths = array();
-	foreach($logOutput as $l) {
-		unset($matches);
-		if (preg_match('<^\s+([MAD])\s(.*)$>', $l, $matches)) {
-			$paths[preg_replace('<^' . $repoPath . '>', '', $matches[2])] = $matches[1];
-		}
+	$xml = new SimpleXMLElement(implode($logOutput));
+	$changes = $xml->xpath('//path');
+	foreach($changes as $c) {
+		$paths[preg_replace('<^' . $repoPath . '>', '', (string) $c)] = (string) $c['action'];
 	}
 	if (empty($paths)) {
 		_echo('No Changed Paths');
 		exit();
 	}
+	ksort($paths);
 
 	$deletions = array();
 	foreach ($paths as $filePath=>$change) {
