@@ -77,8 +77,10 @@ Options:
 <?php
 } else {
 	$sourcePath = get_option('path', 'p');
-	$sourcePathSvn = ($sourcePath? $sourcePath . '/' : '') . '.svn';
-	if (!file_exists($sourcePathSvn)) {
+	if (!$sourcePath) {
+		$sourcePath = '.';
+	}
+	if (!file_exists($sourcePath . '/.svn')) {
 		_echo("Source path is not a subversion working copy.\n  Run command from a working copy directory, or specify the path to the working copy with --path");
 		exit();
 	}
@@ -92,44 +94,31 @@ Options:
 		exit();
 	}
 	$execdir = getcwd();
-
+	
 	// Parse revisions to use.
 	$revision = get_option('revision', 'r');
 	if ($revision) {
+		if ($revision == '?') {
+			// TODO Show available revisions, and prompt
+		}
 		$revision = escapeshellarg($revision);
 	} 
 	else {
 		$revision = 'HEAD';
 	}
-
-	// Change to directory if specified for running svn command.
-	if ($sourcePath) {
-		chdir($sourcePath);
-	}
 	// Determine the relative path in the repository, if checkout is not from 
 	// repository root.
-	exec('svn info', $infoOutput);
-	foreach ($infoOutput as $l) {
-		unset($matches);
-		if (preg_match('<URL:\s(.*)$>', $l, $matches)) {
-			$repoPath = $matches[1];
-		}
-		else if (preg_match('<Repository Root:\s(.*)$>', $l, $matches)) {
-			$repoRoot = $matches[1];
-		}
-	}
-	$repoPath = urldecode(str_replace($repoRoot, '', $repoPath));
+	exec('svn info "' . $sourcePath . '" --xml', $infoOutput);
+	$infoXml = new SimpleXMLElement(implode($infoOutput));
+	$repoRoot = $infoXml->xpath('/info/entry/repository/root');
+	$repoPath = $infoXml->xpath('/info/entry/url');
+	$repoPath = urldecode(str_replace($repoRoot[0], '', $repoPath[0]));
+	
 	if (get_flag('update', 'u')) {
 		_echo("updated working copy\n");
-		exec('svn update');
+		exec('svn update "' . $sourcePath . '"');
 	}
-	exec('svn log --xml -v -r ' . $revision, $logOutput);
-	if ($sourcePath) {
-		chdir($execdir);
-	}
-	else {
-		$sourcePath = '.';
-	}
+	exec('svn log "' . $sourcePath . '" --xml -v -r ' . $revision, $logOutput);
 	
 	// Find the last action performed on each path.
 	$paths = array();
