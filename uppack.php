@@ -1,7 +1,36 @@
 #!/usr/bin/php
 <?php
 
+/**
+ * Copy a file or directory.  
+ * All directory contents are copied, including subdirectories.
+ */
+function copy_path($path, $sourceRoot, $destRoot) {
+	if (is_file($sourceRoot . $path)) {
+		$dir = preg_replace('</[^/]+$>', '', $path); // strip off filename
+		prep_path($destRoot . $dir);
+		_echo('copying file: ' . $path . "\n");
+		copy($sourceRoot . $path, $destRoot . $path) or die('could not copy: ' . $filePath);
+	}
+	elseif (is_dir($sourceRoot . $path)) {
+		$d = dir($sourceRoot . $path);
+		while (false !== ($entry = $d->read())) {
+			if (in_array($entry, array('.','..','.svn'))) {
+				continue;
+			}
+			copy_path($path . '/' . $entry, $sourceRoot, $destRoot);
+		}
+	}
+}
+
+/**
+ * Check if a directory exists, and create if needed.
+ */
 function prep_path($path) {
+	if (is_dir($path)) {
+		return;
+	}
+	_echo('prepping path: ' . $path . "\n");
 	$sections = explode('/', $path);
 	$curpath = '.';
 	foreach ($sections as $s) {
@@ -11,6 +40,7 @@ function prep_path($path) {
 		}
 	}
 }
+
 /**
  * Return the value of a command line option.
  * @return The option value if set, false otherwise.
@@ -26,6 +56,7 @@ function get_option($long, $short = null) {
 	}	
 	return false;
 }
+
 /**
  * Return if a command line flag is set.
  * @return true if the flag is set, false otherwise.
@@ -41,6 +72,7 @@ function get_flag($long, $short = null) {
 	}	
 	return false;
 }
+
 function _echo($text) {
 	static $quiet;
 	if (!isset($quiet)) {
@@ -139,15 +171,7 @@ Options:
 			$deletions[] = $filePath;
 		}
 		else {
-			if (is_file($sourcePath . '/' . $filePath)) {
-				$dirpath = preg_replace('</[^/]+$>', '', $filePath);
-				if (!is_dir($outputDir . $dirpath)) {
-					_echo('prepping path: ' . $outputDir . $dirpath . "\n");
-					prep_path($outputDir . $dirpath);
-				}
-				_echo('copying file: ' . $filePath . "\n");
-				copy($sourcePath . $filePath, $outputDir . $filePath) or die('could not copy: ' . $filePath);
-			}
+			copy_path($filePath, $sourcePath, $outputDir);
 		}
 	}
 
