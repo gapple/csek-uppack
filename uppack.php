@@ -157,7 +157,13 @@ Options:
 	$xml = new SimpleXMLElement(implode($logOutput));
 	$changes = $xml->xpath('//path');
 	foreach($changes as $c) {
-		$paths[preg_replace('<^' . $repoPath . '>', '', (string) $c)] = (string) $c['action'];
+		$path = preg_replace('<^' . $repoPath . '>', '', (string) $c);
+		$action = (string) $c['action'];
+		// If Modification on a directory, it must be just a property change.
+		if ($action == 'M' && is_dir($sourcePath . $path)) {
+			continue;
+		}
+		$paths[$path] = $action;
 	}
 	if (empty($paths)) {
 		_echo('No Changed Paths');
