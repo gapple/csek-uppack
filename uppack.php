@@ -99,7 +99,7 @@ Usage: uppack.php [options]
 
 Options:
   -r [--revision] ARG : Specify a commit or range of commits (inclusive) to 
-                        ouput.  If ommited, HEAD is used.
+                        output.  If omitted, HEAD is used.
   -p [--path] ARG     : Specify the path to the repository to use.
   -o [--output] ARG   : Specify a directory to output to.  Default is 'uppack'.
   -m [--merge]        : If the output directory already exists, proceed anyways.
