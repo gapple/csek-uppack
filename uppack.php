@@ -147,8 +147,9 @@ Options:
 	$repoPath = urldecode(str_replace($repoRoot[0], '', $repoPath[0]));
 	
 	if (get_flag('update', 'u')) {
-		_echo("updated working copy\n");
+		_echo("updating working copy: ");
 		exec('svn update "' . $sourcePath . '"');
+		_echo("complete\n");
 	}
 	exec('svn log "' . $sourcePath . '" --xml -v -r ' . $revision, $logOutput);
 	
