@@ -148,7 +148,10 @@ Options:
 	
 	if (get_flag('update', 'u')) {
 		_echo("updating working copy: ");
-		exec('svn update "' . $sourcePath . '"');
+		exec('svn update "' . $sourcePath . '"', $updateOutput, $returnVar);
+		if ($returnVar) {
+			exit();
+		}
 		_echo("complete\n");
 	}
 	exec('svn log "' . $sourcePath . '" --xml -v -r ' . $revision, $logOutput);
