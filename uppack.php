@@ -112,6 +112,9 @@ Options:
 	if (!$sourcePath) {
 		$sourcePath = '.';
 	}
+	else {
+		$sourcePath = rtrim($sourcePath, '\\/');
+	}
 	if (!file_exists($sourcePath . '/.svn')) {
 		_echo("Source path is not a subversion working copy.\n  Run command from a working copy directory, or specify the path to the working copy with --path");
 		exit();
