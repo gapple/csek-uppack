@@ -143,8 +143,18 @@ Options:
 	}
 	// Determine the relative path in the repository, if checkout is not from 
 	// repository root.
-	exec('svn info "' . $sourcePath . '" --xml', $infoOutput);
-	$infoXml = new SimpleXMLElement(implode($infoOutput));
+	exec('svn info "' . $sourcePath . '" --xml', $infoOutput, $returnVar);
+	if ($returnVar) {
+		exit();
+	}
+
+	try {
+		$infoXml = new SimpleXMLElement(implode($infoOutput));
+	}
+	catch (Exception $e) {
+		_echo("Could not parse SVN info.");
+		exit();
+	}
 	$repoRoot = $infoXml->xpath('/info/entry/repository/root');
 	$repoPath = $infoXml->xpath('/info/entry/url');
 	$repoPath = urldecode(str_replace($repoRoot[0], '', $repoPath[0]));
@@ -157,11 +167,21 @@ Options:
 		}
 		_echo("complete\n");
 	}
-	exec('svn log "' . $sourcePath . '" --xml -v -r ' . $revision, $logOutput);
+	exec('svn log "' . $sourcePath . '" --xml -v -r ' . $revision, $logOutput, $returnVar);
+	if ($returnVar) {
+		exit();
+	}
+	
+	try {
+		$xml = new SimpleXMLElement(implode($logOutput));
+	}
+	catch (Exception $e) {
+		_echo("Could not parse SVN log.");
+		exit();
+	}
 	
 	// Find the last action performed on each path.
 	$paths = array();
-	$xml = new SimpleXMLElement(implode($logOutput));
 	$changes = $xml->xpath('//path');
 	foreach($changes as $c) {
 		$path = preg_replace('<^' . $repoPath . '>', '', (string) $c);
