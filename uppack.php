@@ -6,6 +6,11 @@
  * All directory contents are copied, including subdirectories.
  */
 function copy_path($path, $sourceRoot, $destRoot) {
+
+	if (!is_readable($sourceRoot . $path)) {
+		die('Unable to access file from working copy: ' . $path);
+	}
+
 	if (is_file($sourceRoot . $path)) {
 		$dir = preg_replace('</[^/]+$>', '', $path); // strip off filename
 		prep_path($destRoot . $dir);
