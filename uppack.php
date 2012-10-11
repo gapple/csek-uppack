@@ -214,6 +214,7 @@ Options:
 	}
 
 	if (!empty($deletions)) {
+		prep_path($outputDir);
 		file_put_contents($outputDir . '/uppack-deletions.txt', implode("\n", $deletions)) or die('Could not write deletions file');
 	}
 }
